@@ -7,36 +7,25 @@ import calendarStartIcon from '../../../public/calendar-start.svg'
 import locationIcon from "../../../public/Icon-location.svg"
 import fireIcon from "../../../public/fireIcon.svg"
 import plusIcon from '../../../public/plus-circle.svg'
-
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { getJobByIdAsync, selectPosts, selectPostState } from "@/lib/features/jobs/jobsSlice";
-import { useEffect } from "react";
+import { useGetJobByIdQuery } from '@/app/api/apiSlice'
 import Spinner from "@/app/components/Spinner";
 import Error from "@/app/components/Error"
 
 const page = ({params}: {params: {id: string}}) => {
-
-    const dispatch = useAppDispatch()
-    const postState = useAppSelector(selectPostState)
-
-    const post = postState.currPost
-
+    const {data, isLoading, isError, isSuccess, error } = useGetJobByIdQuery(params.id)
+    const post = data?.data
     const colors = [['text-orange-tag', 'bg-orange-tag', 'border-orange-tag'], ['text-purple-tag', 'bg-purple-tag', 'bg-purple-tag']];
     
-    useEffect(() => {
-        if (!post || params.id != post.id){
-            dispatch(getJobByIdAsync(params.id))
-        }
-    }, [])
-
-    if(postState.status == "loading")
+   
+    if(isLoading)
         return <Spinner />
-    
-    if(postState.status == "failed")
-        return <Error message={postState.error || "Something went Wrong! Try again later!"} />
-    
-    if(post){
 
+    if(isError || !post){
+        const errorMessage = error ? (error as any).data || "Something went wrong! Try again later!" : "Something went wrong! Try again later!";
+        return <Error message={errorMessage} />;
+    }
+      
+    if(isSuccess && post)
         return (
             <main className="md:grid grid-cols-4 p-8">
                 <section className="col-span-3 pr-12 py-12">
@@ -110,8 +99,6 @@ const page = ({params}: {params: {id: string}}) => {
                 </aside>
             </main>
           )
-        }
-    
 
 }
 
